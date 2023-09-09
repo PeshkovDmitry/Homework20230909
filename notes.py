@@ -4,26 +4,25 @@ def cls():
     '''Очищение консоли'''
     os.system('cls')
 
-def show_menu() -> int:
+def show_main_menu() -> int:
     print("\nВыберите необходимое действие:\n"
-          "1. Отобразить весь справочник\n"
-          "2. Найти абонента по имени или фамилии\n"
-          "3. Найти абонента по номеру телефона\n"
-          "4. Добавить абонента в справочник\n"
-          "5. Редактировать данные абонента в справочнике\n"
-          "6. Удалить абонента из справочника\n"
-          "7. Сохранить справочник в текстовом формате\n"
-          "8. Закончить работу")
+          "1. Показать все заметки\n"
+          "2. Найти заметку по заголовку\n"
+          "3. Найти заметку по дате создания/изменения\n"
+          "4. Создать новую заметку\n"
+          "5. Редактировать заметку\n"
+          "6. Удалить заметку\n"
+          "7. Закончить работу")
     choice = int(input("Ваш выбор: "))
     return choice
 
 def read_csv(filename: str) -> list:
     '''Считывание csv-файла в список словарей'''
     data = []
-    fields = ["Фамилия", "Имя", "Телефон", "Описание"]
+    fields = ["Идентификатор", "Заголовок", "Тело", "Дата создания","Дата изменения"]
     with open(filename, 'r', encoding='utf-8') as fin:
         for line in fin:
-            record = dict(zip(fields, line.strip().split(',')))
+            record = dict(zip(fields, line.strip().split(';')))
             data.append(record)
     return data
 
@@ -33,7 +32,7 @@ def write_csv(filename: str, data: list):
         for i in range(len(data)):
             s = ''
             for v in data[i].values():
-                s += v + ','
+                s += v + ';'
             fout.write(f'{s[:-1]}\n')
 
 def get_formatted_result(data: list) -> str:
@@ -143,44 +142,31 @@ def change_user(data: list, name: str):
     data.append(new_user_data)
     print("Контакт успешно отредактирован")
 
-def get_file_name() -> str:
-    '''Метод для ввода имени txt-файла для экспорта'''
-    return input("Введите имя файла для экспорта в txt: ")
-
-def write_txt(filename: str, data: list):
-    '''Метод для записи справочника в txt-файл'''
-    with open(filename + ".txt", 'w', encoding='utf-8') as fout:
-        fout.write(get_formatted_result(data))
-        print(f"Справочник успешно сохранен в файл {filename}.txt")
-
-def work_with_phonebook():
-    choice = show_menu()
-    phone_book = read_csv('phonebook.csv')
-    while (choice != 8):
+def work_with_notes():
+    choice = show_main_menu()
+    notes = read_csv('notes.csv')
+    while (choice != 7):
         cls()
         if choice == 1:
-            print_result(phone_book)
+            print_result(notes)
         elif choice == 2:
             name = get_search_name()
-            print_result(find_by_name(phone_book, name))
+            print_result(find_by_name(notes, name))
         elif choice == 3:
             number = get_search_number()
-            print_result(find_by_number(phone_book, number))
+            print_result(find_by_number(notes, number))
         elif choice == 4:
-            user_data = get_new_user(phone_book[0].keys())
-            add_user(phone_book, user_data)
-            write_csv('phonebook.csv', phone_book)
+            user_data = get_new_user(notes[0].keys())
+            add_user(notes, user_data)
+            write_csv('notes.csv', notes)
         elif choice == 5:
             name = get_search_name()
-            change_user(phone_book, name)
-            write_csv('phonebook.csv', phone_book)
+            change_user(notes, name)
+            write_csv('notes.csv', notes)
         elif choice == 6:
             name = get_search_name()
-            delete_user(phone_book, name)
-            write_csv('phonebook.csv', phone_book)
-        elif choice == 7:
-            file_name = get_file_name()
-            write_txt(file_name, phone_book)
-        choice = show_menu()
+            delete_user(notes, name)
+            write_csv('notes.csv', notes)
+        choice = show_main_menu()
 
-work_with_phonebook()    
+work_with_notes()    

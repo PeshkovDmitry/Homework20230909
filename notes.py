@@ -36,31 +36,24 @@ def write_csv(filename: str, data: list):
                 s += v + ';'
             fout.write(f'{s[:-1]}\n')
 
-def print_result(data: list):
-    '''Выводит список в виде оформленной, отсортированной по дате изменения, таблицы'''
-    if len(data) == 0:
+def print_result(notes: list):
+    '''Выводит оформленный список заметок'''
+    if len(notes) == 0:
         print("Список пуст")
         return 
-    # Формируем список максимальных длин полей (с учетом заголовка)
-    lens = []
-    for key in data[0].keys():
-        vals = [d[key] for d in data]
-        vals.append(key)
-        lens.append(len(max(vals, key = lambda x : len(x))))
-    # Выводим заголовок таблицы
-    lines = ["─"*i for i in lens]
-    key_names = list(map(lambda x, y: f"{x:<{y}}", data[0].keys(), lens))
-    s =  "┌" + "┬".join(lines) + "┐" + "\n"
-    s += "│" + "│".join(key_names) + "│" + "\n"
-    s += "├" + "┼".join(lines) + "┤" + "\n"
-    # Сортируем содержимое таблицы по столбцу "Фамилия" по алфавиту
-    data.sort(key = lambda x: x["Дата изменения"].lower())
-    # Выводим содержимое таблицы
-    for d in data:
-        vals = list(map(lambda x, y: f"{x:<{y}}", d.values(), lens))
-        s += "│" + "│".join(vals) + "│"  + "\n"
-    # Обрамляем таблицу снизу        
-    s += "└" + "┴".join(lines) + "┘"
+    print("Заметки: ")
+    notes.sort(key = lambda x: x["Дата изменения"].lower())
+    s = ""
+    for note in notes:
+        s += "┌" + "─"*10 + "┬" + "─"*40 + "┬" + "─"*40 +"┐" + "\n"
+        s += "│" + "Id: " + f"{note['Идентификатор']:<6}" 
+        s += "│" + "Создан: " + f"{note['Дата создания']:<32}" 
+        s += "│" + "Изменен: " + f"{note['Дата изменения']:<31}" + "│" + "\n"
+        s += "├" + "─"*10 + "┴" + "─"*40 + "┴" + "─"*40 +"┤" + "\n"
+        s += "│" + "Заголовок: " + f"{note['Заголовок']:<81}" + "│" + "\n"
+        s += "├" + "─"*92 + "┤" + "\n"
+        s += "│" + f"{note['Тело']:<92}" + "│" + "\n"
+        s += "└" + "─"*92 + "┘" + "\n"
     print(s)
 
 def find_by_title(data: list, title: str) -> list:
@@ -125,7 +118,7 @@ def change_note(notes: list, id: str):
         note["Тело"] = s
     note["Дата изменения"] = str(datetime.datetime.now())
     notes.append(note)
-    print("Контакт успешно отредактирован")
+    print("Заметка успешно изменена")
 
 def work_with_notes():
     notes = read_csv('notes.csv')

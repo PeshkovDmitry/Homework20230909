@@ -1,4 +1,5 @@
 import os
+import datetime
 
 def cls():
     '''Очищение консоли'''
@@ -36,7 +37,7 @@ def write_csv(filename: str, data: list):
             fout.write(f'{s[:-1]}\n')
 
 def get_formatted_result(data: list) -> str:
-    '''Выводит список в виде оформленной отсортированной по фамилии таблицы с заголовками'''
+    '''Выводит список в виде оформленной, отсортированной по дате изменения, таблицы'''
     if len(data) == 0:
         return "Список пуст"
     # Формируем список максимальных длин полей (с учетом заголовка)
@@ -52,7 +53,7 @@ def get_formatted_result(data: list) -> str:
     s += "│" + "│".join(key_names) + "│" + "\n"
     s += "├" + "┼".join(lines) + "┤" + "\n"
     # Сортируем содержимое таблицы по столбцу "Фамилия" по алфавиту
-    data.sort(key = lambda x: x["Фамилия"].lower())
+    data.sort(key = lambda x: x["Дата изменения"].lower())
     # Выводим содержимое таблицы
     for d in data:
         vals = list(map(lambda x, y: f"{x:<{y}}", d.values(), lens))
@@ -65,52 +66,56 @@ def print_result(data: list):
     '''Вывод таблицы с данными в консоль'''
     print(get_formatted_result(data))
 
-def get_search_name() -> str:
-    '''Функция для ввода фразы для поиска в имени или фамилии'''
-    name = input("Введите часть имени или фамилии для поиска: ")
-    return name
+def get_search_title() -> str:
+    '''Функция для ввода фразы для поиска в заголовке'''
+    title = input("Введите часть заголовка для поиска: ")
+    return title
 
-def find_by_name(data: list, name: str) -> list:
-    '''Функция поиска указанной фразы в именах или фамилиях.
-       Выдает список словарей для всех подходящих контактов'''
+def find_by_title(data: list, title: str) -> list:
+    '''Функция поиска указанной фразы в заголовке.
+       Выдает список словарей для всех подходящих заметок'''
     res = []
     for i in data:
-        if name.lower() in i["Фамилия"].lower() or name.lower() in i["Имя"].lower():
+        if title.lower() in i["Заголовок"].lower():
             res.append(i)
     return res
 
-def get_search_number() -> str:
-    '''Функция для ввода номера телефона для поиска'''
-    number = input("Введите часть номера для поиска: ")
-    return number
+def get_search_date() -> str:
+    '''Функция для ввода даты для поиска'''
+    date = input("Введите часть даты создания или изменения для поиска: ")
+    return date
 
-def find_by_number(data: list, number: str) -> list:
-    '''Функция поиска по номеру телефона.
-       Выдает список словарей для всех подходящих контактов'''
+def find_by_date(data: list, date: str) -> list:
+    '''Функция поиска по дате создания/изменения.
+       Выдает список словарей для всех подходящих заметок'''
     res = []
     for i in data:
-        if number in i["Телефон"]:
+        if date.lower in i["Дата создания"] or date.lower in i["Дата изменения"]:
             res.append(i)
     return res
 
-def get_new_user(keys: list) -> dict:
-    '''Функция для создания нового контакта.
-       Функции передается список запрашиваемых ключей на случай расширения функциональности справочника'''
-    print("Введите данные")
+def get_new_note(data: list) -> dict:
+    '''Функция для создания новой заметки'''
     res = {}
-    for key in keys:
-        res[key] = input(f"{key}: ")
+    ids = []
+    for i in data:
+        ids.append(int(i["Идентификатор"]))
+    res["Идентификатор"] = str(max(ids) + 1)
+    res["Заголовок"] = input(f"Введите заголовок: ")
+    res["Тело"] = input(f"Введите текст заметки: ")
+    res["Дата создания"] = str(datetime.datetime.now())
+    res["Дата изменения"] = str(datetime.datetime.now())
     return res
 
-def add_user(data: list, user_data: dict):
-    '''Метод для добавления нового контакта в базу'''
-    data.append(user_data)
-    print_result([user_data])
-    print("Новый контакт успешно добавлен")
+def add_note(data: list, note: dict):
+    '''Метод для добавления новой заметки в базу'''
+    data.append(note)
+    print_result([note])
+    print("Новая заметка успешно добавлена")
 
-def delete_user(data: list, name: str):
+def delete_note(data: list, name: str):
     '''Метод для удаления контакта из справочника'''
-    users_for_delete = find_by_name(data, name)
+    users_for_delete = find_by_title(data, name)
     if len(users_for_delete) == 0:
         print("По вашему запросу не найдено контактов")
         return
@@ -124,7 +129,7 @@ def delete_user(data: list, name: str):
 
 def change_user(data: list, name: str):
     '''Метод для редактирования данных контакта в справочнике'''
-    old_user_data = find_by_name(data, name)
+    old_user_data = find_by_title(data, name)
     if len(old_user_data) == 0:
         print("По вашему запросу не найдено контактов")
         return
@@ -134,7 +139,7 @@ def change_user(data: list, name: str):
     print("Данные контакта для редактирования:")
     print_result(old_user_data)
     print("Введите новые данные. Если поле не требует изменения, оставьте его пустым")
-    new_user_data = get_new_user(old_user_data[0].keys())
+    new_user_data = get_new_note(old_user_data[0].keys())
     for key in new_user_data.keys():
         if new_user_data[key] == "":
             new_user_data[key] = old_user_data[0][key]
@@ -150,22 +155,22 @@ def work_with_notes():
         if choice == 1:
             print_result(notes)
         elif choice == 2:
-            name = get_search_name()
-            print_result(find_by_name(notes, name))
+            title = get_search_title()
+            print_result(find_by_title(notes, title))
         elif choice == 3:
-            number = get_search_number()
-            print_result(find_by_number(notes, number))
+            date = get_search_date()
+            print_result(find_by_date(notes, date))
         elif choice == 4:
-            user_data = get_new_user(notes[0].keys())
-            add_user(notes, user_data)
+            note_data = get_new_note(notes)
+            add_note(notes, note_data)
             write_csv('notes.csv', notes)
         elif choice == 5:
-            name = get_search_name()
-            change_user(notes, name)
+            title = get_search_title()
+            change_user(notes, title)
             write_csv('notes.csv', notes)
         elif choice == 6:
-            name = get_search_name()
-            delete_user(notes, name)
+            title = get_search_title()
+            delete_note(notes, title)
             write_csv('notes.csv', notes)
         choice = show_main_menu()
 
